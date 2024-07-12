@@ -1,5 +1,7 @@
 # NetworkSimulation
 
+</br>Packages Needed: Sqlite3/tkinter/matplotlib</br>
+
 <br>This script is made to simulate services getting accessed and it will write it to a DataBase file you can view with the Sqlitebrowser, It also has a GUI script to show what service got accessed and other stuff</br>
 
 <br>RED = Attack Event</br>
