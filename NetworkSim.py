@@ -12,54 +12,59 @@ def init_db():
     conn = sqlite3.connect('network_events.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS events
-                 (id INTEGER PRIMARY KEY, event_type TEXT, details TEXT)''')
+                 (id INTEGER PRIMARY KEY, event_type TEXT, lan_ip TEXT, wan_ip TEXT, details TEXT)''')
     conn.commit()
     conn.close()
 
-def insert_event(event_type, event_details):
+def insert_event(event_type, lan_ip, wan_ip, event_details):
     conn = sqlite3.connect('network_events.db')
     c = conn.cursor()
-    c.execute("INSERT INTO events (event_type, details) VALUES (?, ?)", (event_type, event_details))
+    c.execute("INSERT INTO events (event_type, lan_ip, wan_ip, details) VALUES (?, ?, ?, ?)", 
+              (event_type, lan_ip, wan_ip, event_details))
     conn.commit()
     conn.close()
 
 def fetch_events():
     conn = sqlite3.connect('network_events.db')
     c = conn.cursor()
-    c.execute("SELECT event_type, details FROM events")
+    c.execute("SELECT event_type, lan_ip, wan_ip, details FROM events")
     events = c.fetchall()
     conn.close()
     return events
 
 # Event classes
 class Event:
-    def __init__(self, ip, details):
-        self.ip = ip
+    def __init__(self, lan_ip, wan_ip, details):
+        self.lan_ip = lan_ip
+        self.wan_ip = wan_ip
         self.details = details
 
 class AttackEvent(Event):
-    def __init__(self, ip, details):
-        super().__init__(ip, details)
+    def __init__(self, lan_ip, wan_ip, details):
+        super().__init__(lan_ip, wan_ip, details)
         self.event_type = 'Attack'
 
 class ServerEvent(Event):
-    def __init__(self, ip, details):
-        super().__init__(ip, details)
+    def __init__(self, lan_ip, wan_ip, details):
+        super().__init__(lan_ip, wan_ip, details)
         self.event_type = 'Server'
 
 class PacketEvent(Event):
-    def __init__(self, ip, details):
-        super().__init__(ip, details)
+    def __init__(self, lan_ip, wan_ip, details):
+        super().__init__(lan_ip, wan_ip, details)
         self.event_type = 'Packet'
 
 class ServiceEvent(Event):
-    def __init__(self, ip, details):
-        super().__init__(ip, details)
+    def __init__(self, lan_ip, wan_ip, details):
+        super().__init__(lan_ip, wan_ip, details)
         self.event_type = 'Service'
 
 # Network functions
 def generate_random_ip(subnet):
     return f"{subnet}.{random.randint(1, 254)}"
+
+def generate_random_wan_ip():
+    return f"{random.randint(1, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 def segregate_network():
     # Example subnets
@@ -86,7 +91,7 @@ class NetworkGUI:
         packet_x, packet_y = [], []
         service_x, service_y = [], []
 
-        for i, (event_type, details) in enumerate(events):
+        for i, (event_type, lan_ip, wan_ip, details) in enumerate(events):
             if event_type == 'Attack':
                 attack_x.append(i)
                 attack_y.append(1)
@@ -109,7 +114,7 @@ class NetworkGUI:
         self.canvas.draw()
 
 def log_event(event, gui):
-    insert_event(event.event_type, event.details)
+    insert_event(event.event_type, event.lan_ip, event.wan_ip, event.details)
     gui.update_graph()
 
 def generate_traffic(gui):
@@ -118,17 +123,18 @@ def generate_traffic(gui):
     while True:
         event_type = random.choice(['Attack', 'Server', 'Packet', 'Service'])
         subnet = random.choice(subnets)
-        ip = generate_random_ip(subnet)
+        lan_ip = generate_random_ip(subnet)
+        wan_ip = generate_random_wan_ip()
 
         if event_type == 'Attack':
-            event = AttackEvent(ip, "Simulated attack event.")
+            event = AttackEvent(lan_ip, wan_ip, "Simulated attack event.")
         elif event_type == 'Server':
-            event = ServerEvent(ip, "Server event occurred.")
+            event = ServerEvent(lan_ip, wan_ip, "Server event occurred.")
         elif event_type == 'Packet':
-            event = PacketEvent(ip, "Packet event logged.")
+            event = PacketEvent(lan_ip, wan_ip, "Packet event logged.")
         else:
             service = random.choice(services)
-            event = ServiceEvent(ip, f"Accessed {service} service.")
+            event = ServiceEvent(lan_ip, wan_ip, f"Accessed {service} service.")
         
         log_event(event, gui)
         time.sleep(random.uniform(0.1, 1.0))  # Simulate varying traffic rates
@@ -139,6 +145,7 @@ def run_simulation(gui):
 
 # Main execution
 if __name__ == '__main__':
+    init_db()
     root = tk.Tk()
     gui = NetworkGUI(root)
     run_simulation(gui)
