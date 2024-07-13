@@ -15,3 +15,5 @@
 ![NetworkSimGUI](https://github.com/user-attachments/assets/06767f27-8307-41db-a5c3-26bf41691726)
 
 <br>Now the script logs the WAN Ip and LAN Ip accessing the service, WAN means Wide Area Network and LAN mean Local Area Network.</br>
+
+<br>Now the script can display the LAN Ips and WAN Ips accessing what service in a dialog box in the GUI window.</br>
