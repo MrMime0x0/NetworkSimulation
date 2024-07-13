@@ -80,6 +80,24 @@ class NetworkGUI:
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.root)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         
+        self.wan_ip_frame = tk.Frame(root)
+        self.wan_ip_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        self.wan_ip_count_label = tk.Label(self.wan_ip_frame, text="WAN IPs accessing services: 0")
+        self.wan_ip_count_label.pack(side=tk.LEFT)
+        
+        self.wan_ip_text = tk.Text(self.wan_ip_frame, height=5, width=50)
+        self.wan_ip_text.pack(side=tk.LEFT, fill=tk.X)
+
+        self.lan_ip_frame = tk.Frame(root)
+        self.lan_ip_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        self.lan_ip_count_label = tk.Label(self.lan_ip_frame, text="LAN IPs accessing services: 0")
+        self.lan_ip_count_label.pack(side=tk.LEFT)
+        
+        self.lan_ip_text = tk.Text(self.lan_ip_frame, height=5, width=50)
+        self.lan_ip_text.pack(side=tk.LEFT, fill=tk.X)
+
         self.update_graph()
 
     def update_graph(self):
@@ -91,7 +109,12 @@ class NetworkGUI:
         packet_x, packet_y = [], []
         service_x, service_y = [], []
 
+        wan_ips = set()
+        lan_ips = set()
+
         for i, (event_type, lan_ip, wan_ip, details) in enumerate(events):
+            wan_ips.add(wan_ip)
+            lan_ips.add(lan_ip)
             if event_type == 'Attack':
                 attack_x.append(i)
                 attack_y.append(1)
@@ -112,6 +135,17 @@ class NetworkGUI:
 
         self.ax.legend()
         self.canvas.draw()
+
+        self.wan_ip_count_label.config(text=f"WAN IPs accessing services: {len(wan_ips)}")
+        self.lan_ip_count_label.config(text=f"LAN IPs accessing services: {len(lan_ips)}")
+
+        self.lan_ip_text.delete(1.0, tk.END)
+        for ip in lan_ips:
+            self.lan_ip_text.insert(tk.END, ip + '\n')
+
+        self.wan_ip_text.delete(1.0, tk.END)
+        for ip in wan_ips:
+            self.wan_ip_text.insert(tk.END, ip + '\n')
 
 def log_event(event, gui):
     insert_event(event.event_type, event.lan_ip, event.wan_ip, event.details)
